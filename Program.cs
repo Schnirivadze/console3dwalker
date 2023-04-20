@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Xml;
 using test;
 
 internal class Program
@@ -31,6 +32,78 @@ internal class Program
 	#endregion
 	static void Main(string[] args)
 	{
+		#region XmlSettings
+		XmlDocument xmlDoc = new XmlDocument();
+
+		// Load the XML file from the specified path
+		xmlDoc.Load("settings.xml");
+
+		// Get the root node of the document
+		XmlNode rootNode = xmlDoc.DocumentElement;
+
+		// Traverse the child nodes of the root node
+		foreach (XmlNode node in rootNode.ChildNodes)
+		{
+			int minroomsize = -1, maxroomsize = -1, mapsize = -1, rooms = -1;
+
+			//Console.WriteLine(node.InnerText);
+
+			switch (node.Name)
+			{
+				case "fps":
+					fps = Convert.ToInt32(node.InnerText);
+					break;
+				case "startviewdegree":
+					pD = Convert.ToInt32(node.InnerText);
+					break;
+				case "pov":
+					pov = Convert.ToInt32(node.InnerText);
+					break;
+				case "steppov":
+					steppov = XmlConvert.ToDouble(node.InnerText);
+					break;
+				case "speed":
+					speed = XmlConvert.ToDouble(node.InnerText);
+					break;
+				case "rangeofview":
+					viewlength = Convert.ToInt32(node.InnerText);
+					break;
+				case "screenheight":
+					ScreenHeight = Convert.ToInt32(node.InnerText);
+					break;
+
+				case "mapinfo":
+					foreach (XmlNode mapinfo in node.ChildNodes)
+					{
+						switch (mapinfo.Name)
+						{
+							case "size":
+								mapsize = Convert.ToInt32(mapinfo.InnerText);
+								break;
+							case "minroomsize":
+								minroomsize = Convert.ToInt32(mapinfo.InnerText);
+								break;
+							case "maxroomsize":
+								maxroomsize = Convert.ToInt32(mapinfo.InnerText);
+								break;
+							case "rooms":
+								rooms = Convert.ToInt32(mapinfo.InnerText);
+								break;
+						}
+					}
+					break;
+
+			}
+			if (minroomsize != (-1) && maxroomsize != (-1) && mapsize != (-1) && rooms != (-1))
+			{
+				mb = new MapBuilder(mapsize, 20, minroomsize, maxroomsize, minroomsize, maxroomsize, false);
+				pX = mb.startX;
+				pY = mb.startY;
+			}
+			//Console.WriteLine(node.Name + ": " + node.InnerText);
+		}
+		#endregion
+		#region Set up
 		Console.SetWindowSize((int)(pov / steppov) + 1, ScreenHeight + 1);
 		Console.SetBufferSize((int)(pov / steppov) + 1, ScreenHeight + 1);
 		Console.CursorVisible = false;
@@ -45,6 +118,7 @@ internal class Program
 		int sf = 0;
 		string[] minimap = new string[1];
 		Stopwatch stpw = new();
+		#endregion
 		while (true)
 		{
 			stpw.Restart();
@@ -53,7 +127,7 @@ internal class Program
 			DistanceList.Clear();
 			CeilingList.Clear();
 			FloorList.Clear();
-			Console.Title = $"D:{pD}";
+			//Console.Title = $"D:{pD}";
 			// For each column, calculate the projected ray angle into world space
 			for (double d = 0 - pov / 2; d < pov / 2; d += steppov)
 			{

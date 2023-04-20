@@ -1,0 +1,17 @@
+<settings>
+    <fps>30</fps>
+    <mapsize>50</mapsize>
+    <startviewdegree>0</startviewdegree>
+    <pov>60</pov>
+    <steppov>0.5</steppov>
+    <speed>0.1</speed>
+    <rangeofview>15</rangeofview>
+    <screenheight>30</screenheight>
+    <mapinfo>
+        <size>50</size>
+        <rooms>20</rooms>
+        <minroomsize>7</minroomsize>
+        <maxroomsize>10</maxroomsize>
+    </mapinfo>
+</settings>
+    
