@@ -30,10 +30,12 @@ internal class Program
 	static int viewlength = 15;
 	static int ScreenHeight = 30;
 	static bool showmap = false;
+	static bool showstats = false;
 	#endregion
 	static void Main(string[] args)
 	{
 		#region XmlSettings
+
 		XmlDocument xmlDoc = new XmlDocument();
 
 		// Load the XML file from the specified path
@@ -130,6 +132,7 @@ internal class Program
 		List<double> DistanceList = new List<double>();
 		int sf = 0;
 		string[] minimap = new string[1];
+		string[] stats = new string[1];
 		Stopwatch stpw = new();
 		#endregion
 		while (true)
@@ -140,7 +143,7 @@ internal class Program
 			DistanceList.Clear();
 			CeilingList.Clear();
 			FloorList.Clear();
-			//Console.Title = $"D:{pD}";
+			//Console.Title = $"D:{showstats}";
 			// For each column, calculate the projected ray angle into world space
 			for (double d = 0 - pov / 2; d < pov / 2; d += steppov)
 			{
@@ -175,13 +178,18 @@ internal class Program
 			}
 			//Fill Outputbuilder
 			int startx = 0;
+			int endx = (int)(pov / steppov);
 			if (showmap) { minimap = mb.getmap((int)pX, (int)pY, 10, pD); }
+			if (showstats) { stats = getStats(pX,pY,pD,seed,pov,speed,steppov,viewlength,fps); }
+
 			for (int y = 0; y < ScreenHeight; y++)
 			{
 				if (showmap && y < minimap.Length) { OutputBuilder.Append(minimap[y]); startx = minimap[y].Length; }
 				else { startx = 0; }
-
-				for (int x = startx; x < (int)(pov / steppov); x++)
+				if (showstats && y < stats.Length) { endx = (int)(pov / steppov) - stats[y].Length; }
+				else { endx = (int)(pov / steppov); }
+				
+				for (int x = startx; x <endx; x++)
 				{
 					char wallshade = ' ';
 					if (DistanceList[x] <= viewlength / 4) wallshade = '█';
@@ -204,6 +212,8 @@ internal class Program
 						OutputBuilder.Append(wallshade);
 					}
 				}
+				
+				if (showstats && y < stats.Length) OutputBuilder.Append(stats[y]);
 				OutputBuilder.Append('\n');
 			}
 			//Output
@@ -214,6 +224,36 @@ internal class Program
 
 
 		}
+	}
+	static string[] getStats(double x, double y, int degree, int seed, int pov, double speed, double steppov, int viewlength, int fps)
+	{
+		int biggestlength = 0;
+		List<string> stats = new List<string>
+			{
+				"│ X: " + x.ToString("0.00") + " ",
+				"│ Y: " + y.ToString("0.00") + " ",
+				"│ D: " + degree + " ",
+				"│ Seed: " + seed + " ",
+				"│ FOV: " + pov + "/" + steppov + " ",
+				"│ Speed: " + speed.ToString("0.00") + " ",
+				"│ Range: " + viewlength + " ",
+				"│ FPS: " + fps + " "
+			};
+		foreach (string line in stats)
+		{
+			if (line.Length > biggestlength) biggestlength = line.Length;
+		}
+		for (int i = 0; i < stats.Count; i++)
+		{
+			if (stats[i].Length < biggestlength) stats[i] += new string(' ', biggestlength - stats[i].Length) + '│';
+			else stats[i] += '│';
+		}
+		stats.Add('└' + new string('─', stats[0].Length - 2) + '┘');
+		stats.Insert(0, '├' + new string('-', stats[0].Length - 2) + '┤');
+		stats.Insert(0, '│' + new string(' ', (stats[0].Length - 8) / 2) + "STATS " + new string(' ', (stats[0].Length - 8) / 2) + '│');
+		stats.Insert(0, '┌' + new string('─', stats[0].Length - 2) + '┐');
+
+		return stats.ToArray();
 	}
 
 	private static void movementWhatch()
@@ -238,6 +278,9 @@ internal class Program
 			else if (key.Key == ConsoleKey.M)
 			{
 				showmap = !showmap;
+			}else if (key.Key == ConsoleKey.I)
+			{
+				showstats = !showstats;
 			}
 
 		}

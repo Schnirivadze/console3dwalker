@@ -208,15 +208,7 @@
 		public string[] getmap(int _x, int _y, int range, int degree)
 		{
 			char playerch = '@';
-
-			/*if (degree >= 23 && degree < 68) playerch = '↘';
-			else if (degree >= 68 && degree < 113) playerch = '↓';
-			else if (degree >= 113 && degree < 158) playerch = '↙';
-			else if (degree >= 158 && degree < 203) playerch = '←';
-			else if (degree >= 203 && degree < 248) playerch = '↖';
-			else if (degree >= 248 && degree < 293) playerch = '↑';
-			else if (degree >= 293 && degree < 337) playerch = '↗';
-			else if ((degree >= 337 && degree < 360)|| (degree >= 0 && degree < 23)) playerch = '→';*/
+			
 
 			if (degree >= 45 && degree < 135) playerch = '˃';
 			else if (degree >= 135 && degree < 225) playerch = '˄';
