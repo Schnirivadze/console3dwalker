@@ -16,7 +16,7 @@
 		public int startX = -1;
 		public int startY = -1;
 		public bool[][] Map = new bool[10][];
-		public MapBuilder(int size, int rooms, int minwidthroom, int maxwidthroom, int minheightroom, int maxheightroom, bool logging)
+		public MapBuilder(int size, int rooms, int minwidthroom, int maxwidthroom, int minheightroom, int maxheightroom, bool logging, int seed)
 		{
 			if (logging) Console.WriteLine("Making map");
 			//------------------------------------------------------------------------------------------------------create map
@@ -31,8 +31,9 @@
 			}
 			if (logging) Console.WriteLine("Map made");
 			//------------------------------------------------------------------------------------------------------create rooms
-			Random random = new Random();
+			Random random = new Random(seed);
 			Room[] Rooms = new Room[rooms];
+
 			for (int i = 0; i < rooms; i++)
 			{
 				int width = random.Next(minwidthroom, maxwidthroom);
@@ -54,6 +55,7 @@
 				}
 
 			}
+
 			if (logging) Console.WriteLine("Rooms created");
 			//------------------------------------------------------------------------------------------------------make pathes
 			foreach (Room room in Rooms)
@@ -215,7 +217,7 @@
 			else if (degree >= 248 && degree < 293) playerch = '↑';
 			else if (degree >= 293 && degree < 337) playerch = '↗';
 			else if ((degree >= 337 && degree < 360)|| (degree >= 0 && degree < 23)) playerch = '→';*/
-		
+
 			if (degree >= 45 && degree < 135) playerch = '˃';
 			else if (degree >= 135 && degree < 225) playerch = '˄';
 			else if (degree >= 225 && degree < 315) playerch = '˂';
@@ -245,6 +247,24 @@
 			}//└──┘
 			map.Add('└' + new string('─', (int)range * 2) + '┘');
 			return map.ToArray();
+		}
+		public bool CheckCollision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
+		{
+			// calculate the right, bottom, and left edges of each rectangle
+			int r1 = x1 + w1;
+			int b1 = y1 + h1;
+			int r2 = x2 + w2;
+			int b2 = y2 + h2;
+
+			// check for intersection along both axes
+			if (x1 < r2 && r1 > x2 && y1 < b2 && b1 > y2)
+			{
+				// rectangles overlap, handle collision here
+				return true;
+			}
+
+			// no intersection found
+			return false;
 		}
 
 	}

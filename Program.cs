@@ -18,7 +18,8 @@ internal class Program
 	#endregion
 	#region Static variables
 	static int fps = 30;
-	static MapBuilder mb = new(50, 50, 7, 10, 7, 10, false);
+	static int seed = 0;
+	static MapBuilder mb = new(50, 50, 7, 10, 7, 10, false ,14);
 	static StringBuilder OutputBuilder = new();
 	static double pX = mb.startX;
 	static double pY = mb.startY;
@@ -77,6 +78,17 @@ internal class Program
 					{
 						switch (mapinfo.Name)
 						{
+							case "seed":
+								if(mapinfo.InnerText.ToLower() == "random")
+								{
+									Random r = new();
+									seed = r.Next();
+								}
+								else
+								{
+									seed = Convert.ToInt32(mapinfo.InnerText);
+								}
+								break;
 							case "size":
 								mapsize = Convert.ToInt32(mapinfo.InnerText);
 								break;
@@ -96,7 +108,8 @@ internal class Program
 			}
 			if (minroomsize != (-1) && maxroomsize != (-1) && mapsize != (-1) && rooms != (-1))
 			{
-				mb = new MapBuilder(mapsize, 20, minroomsize, maxroomsize, minroomsize, maxroomsize, false);
+				mb = new(50, 50, 7, 10, 7, 10, false, seed);
+				//mb = new MapBuilder(mapsize, 20, minroomsize, maxroomsize, minroomsize, maxroomsize, false);
 				pX = mb.startX;
 				pY = mb.startY;
 			}
