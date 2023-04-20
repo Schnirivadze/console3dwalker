@@ -1,0 +1,15 @@
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\game1.exe
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\game1.deps.json
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\game1.runtimeconfig.json
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\game1.dll
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\game1.pdb
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.csproj.AssemblyReference.cache
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.AssemblyInfoInputs.cache
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.AssemblyInfo.cs
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.csproj.CoreCompileInputs.cache
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.dll
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\refint\game1.dll
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.pdb
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.genruntimeconfig.cache
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\ref\game1.dll
