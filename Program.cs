@@ -18,6 +18,7 @@ internal class Program
 	#endregion
 	#region Static variables
 	static int fps = 30;
+	static int fpslimit = 10;
 	static int seed = 0;
 	static MapBuilder mb = new(50, 50, 7, 10, 7, 10, false ,14);
 	static StringBuilder OutputBuilder = new();
@@ -53,8 +54,9 @@ internal class Program
 
 			switch (node.Name)
 			{
-				case "fps":
-					fps = Convert.ToInt32(node.InnerText);
+				case "fpslimit":
+					if (node.InnerText.ToLower() == "none") fpslimit = 1000000 ;
+					else fpslimit = Convert.ToInt32(node.InnerText);
 					break;
 				case "startviewdegree":
 					pD = Convert.ToInt32(node.InnerText);
@@ -180,7 +182,7 @@ internal class Program
 			int startx = 0;
 			int endx = (int)(pov / steppov);
 			if (showmap) { minimap = mb.getmap((int)pX, (int)pY, 10, pD); }
-			if (showstats) { stats = getStats(pX,pY,pD,seed,pov,speed,steppov,viewlength,fps); }
+			if (showstats) { stats = getStats(pX,pY,pD,seed,pov,speed,steppov,viewlength,fps,fpslimit); }
 
 			for (int y = 0; y < ScreenHeight; y++)
 			{
@@ -219,13 +221,35 @@ internal class Program
 			//Output
 			Console.SetCursorPosition(0, 0);
 			Console.Write(OutputBuilder.ToString());
-			stpw.Stop();
-			if (1000 / fps > stpw.Elapsed.Milliseconds) Thread.Sleep(1000 / fps - stpw.Elapsed.Milliseconds);
+			//stpw.Stop();
+			//fps = 1000 / stpw.Elapsed.Milliseconds;
+			//if (fps > fpslimit&& (1000 / fpslimit - stpw.Elapsed.Milliseconds)>0) stpw.Start(); Thread.Sleep(1000 / fpslimit - stpw.Elapsed.Milliseconds);
+			//stpw.Stop();
+			//fps = 1000 / stpw.Elapsed.Milliseconds;
+			//if (1000 / fps > stpw.Elapsed.Milliseconds) Thread.Sleep(1000 / fps - stpw.Elapsed.Milliseconds);
+			// Measure elapsed time since last frame
+			double elapsedSeconds = stpw.Elapsed.TotalSeconds;
 
+			// Calculate remaining time until next frame
+			double remainingSeconds = 1.0 / fpslimit - elapsedSeconds;
+
+			// Wait for remaining time using a thread sleep
+			if (remainingSeconds > 0)
+			{
+				Thread.Sleep(TimeSpan.FromSeconds(remainingSeconds));
+			}
+			fps = (int)(1000 / stpw.Elapsed.TotalMilliseconds);
+
+			// Restart the stopwatch for the next frame
+			stpw.Restart();
+			if (fpslimit!=1000000) 
+			{
+				Console.Title = "66";
+			}
 
 		}
 	}
-	static string[] getStats(double x, double y, int degree, int seed, int pov, double speed, double steppov, int viewlength, int fps)
+	static string[] getStats(double x, double y, int degree, int seed, int pov, double speed, double steppov, int viewlength, int fps,int fpslimit)
 	{
 		int biggestlength = 0;
 		List<string> stats = new List<string>
@@ -237,7 +261,7 @@ internal class Program
 				"│ FOV: " + pov + "/" + steppov + " ",
 				"│ Speed: " + speed.ToString("0.00") + " ",
 				"│ Range: " + viewlength + " ",
-				"│ FPS: " + fps + " "
+				"│ FPS: " + fps + "/"+((fpslimit==1000000)? '∞': fpslimit.ToString())+' '
 			};
 		foreach (string line in stats)
 		{
