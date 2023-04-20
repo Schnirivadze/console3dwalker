@@ -215,11 +215,11 @@
 			else if (degree >= 248 && degree < 293) playerch = '↑';
 			else if (degree >= 293 && degree < 337) playerch = '↗';
 			else if ((degree >= 337 && degree < 360)|| (degree >= 0 && degree < 23)) playerch = '→';*/
-
-			if (degree >= 45 && degree < 135) playerch = '←';
-			else if (degree >= 135 && degree < 225) playerch = '↑';
-			else if (degree >= 225 && degree < 315) playerch = '→';
-			else if ((degree >= 315 && degree <= 360) || (degree >= 0 && degree < 45)) playerch = '↓';
+		
+			if (degree >= 45 && degree < 135) playerch = '˃';
+			else if (degree >= 135 && degree < 225) playerch = '˄';
+			else if (degree >= 225 && degree < 315) playerch = '˂';
+			else if ((degree >= 315 && degree <= 360) || (degree >= 0 && degree < 45)) playerch = '˅';
 			List<string> map = new List<string>();
 			map.Add('┌' + new string('─', (int)range * 2) + '┐');
 			map.Add('│' + new string(' ', (int)((range * 2) - 3) / 2) + "MAP " + new string(' ', (int)((range * 2) - 3) / 2) + '│');

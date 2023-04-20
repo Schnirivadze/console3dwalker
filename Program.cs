@@ -138,12 +138,12 @@ internal class Program
 			// Convert degrees to radians
 			double angle = pD * Math.PI / 180.0;
 
-			if (key.Key == ConsoleKey.W && !mb.Map[(int)(pY + step * Math.Sin(angle))][(int)(pX + step * Math.Cos(angle))])
+			if (key.Key == ConsoleKey.W && !mb.Map[(int)(pY + step * Math.Cos(angle))][(int)(pX + step * Math.Sin(angle))])
 			{
 				pX += step * Math.Sin(angle);
 				pY += step * Math.Cos(angle);
 			}
-			else if (key.Key == ConsoleKey.S && !mb.Map[(int)(pY - step * Math.Sin(angle))][(int)(pX - step * Math.Cos(angle))])
+			else if (key.Key == ConsoleKey.S && !mb.Map[(int)(pY - step * Math.Cos(angle))][(int)(pX - step * Math.Sin(angle))])
 			{
 				pX -= step * Math.Sin(angle);
 				pY -= step * Math.Cos(angle);
