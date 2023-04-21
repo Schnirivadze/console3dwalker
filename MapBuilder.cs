@@ -1,4 +1,6 @@
-﻿namespace test
+﻿using System.Drawing;
+
+namespace test
 {
 	internal class MapBuilder
 	{
@@ -205,7 +207,7 @@
 				if (startX != -1 && startY != -1) break;
 			}
 		}
-		public string[] getmap(int _x, int _y, int range, int degree)
+		public string[] getmap(int _x, int _y, int range, int degree, Point[] seenwalls)
 		{
 			char playerch = '@';
 			
@@ -219,15 +221,25 @@
 			map.Add('│' + new string(' ', (int)((range * 2) - 3) / 2) + "MAP " + new string(' ', (int)((range * 2) - 3) / 2) + '│');
 			map.Add('├' + new string('─', (int)range * 2) + '┤');
 			//┤ ├
-			for (double y = _y - range; y < _y + range; y++)
+			for (int y = _y - range; y < _y + range; y++)
 			{
 				string line = "│";
-				for (double x = _x - range; x < _x + range; x++)
+				for (int x = _x - range; x < _x + range; x++)
 				{
 
 					if (x >= 0 && y >= 0 && x < Map[0].Length && y < Map.Length)
 					{//░▒█▓
-						line += (y == _y && x == _x) ? playerch : (Map[(int)y][(int)x]) ? '▒' : ' ';
+						if (y == _y && x == _x) line += playerch;
+						else if (Map[y][x])
+						{
+							if (seenwalls.Contains(new Point(x, y))) line += '▓';
+							else line += '▒';
+						}
+						else
+						{
+							line += ' ';
+						}
+							//line += (y == _y && x == _x) ? playerch : (seenwalls.Contains(new Point((int)x,(int)y)))? '▓' : (Map[(int)y][(int)x]) ? '▒' : ' ';
 					}
 					else
 					{

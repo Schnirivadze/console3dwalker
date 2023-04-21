@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
@@ -132,6 +133,7 @@ internal class Program
 		List<int> CeilingList = new List<int>();
 		List<int> FloorList = new List<int>();
 		List<double> DistanceList = new List<double>();
+		List<Point> Seenwalls = new List<Point>();
 		int sf = 0;
 		string[] minimap = new string[1];
 		string[] stats = new string[1];
@@ -144,7 +146,8 @@ internal class Program
 			OutputBuilder.Clear();
 			DistanceList.Clear();
 			CeilingList.Clear();
-			FloorList.Clear();
+			FloorList.Clear(); 
+			Seenwalls.Clear();
 			//Console.Title = $"D:{showstats}";
 			// For each column, calculate the projected ray angle into world space
 			for (double d = 0 - pov / 2; d < pov / 2; d += steppov)
@@ -161,11 +164,16 @@ internal class Program
 					//if out of bounds
 					if (testX < 0 || testY < 0 || testX > mb.Map.Length || testY > mb.Map.Length)
 					{
-						distanceToWall = viewlength; break;
+						distanceToWall = viewlength;
+						
+						
+
+						break;
 					}
 					else if (mb.Map[testY][testX])
 					{
 						distanceToWall *= Math.Cos(Math.Abs(d) / 180 * Math.PI);
+						Seenwalls.Add(new(testX, testY));
 						break;
 					}
 
@@ -181,7 +189,7 @@ internal class Program
 			//Fill Outputbuilder
 			int startx = 0;
 			int endx = (int)(pov / steppov);
-			if (showmap) { minimap = mb.getmap((int)pX, (int)pY, 10, pD); }
+			if (showmap) { minimap = mb.getmap((int)pX, (int)pY, 10, pD, Seenwalls.ToArray()) ; }
 			if (showstats) { stats = getStats(pX,pY,pD,seed,pov,speed,steppov,viewlength,fps,fpslimit); }
 
 			for (int y = 0; y < ScreenHeight; y++)
