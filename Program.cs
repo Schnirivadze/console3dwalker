@@ -21,7 +21,7 @@ internal class Program
 	static int fps = 30;
 	static int fpslimit = 10;
 	static int seed = 0;
-	static MapBuilder mb = new(50, 50, 7, 10, 7, 10, false ,14);
+	static MapBuilder mb = new(50, 50, 7, 10, 7, 10, false, 14);
 	static StringBuilder OutputBuilder = new();
 	static double pX = mb.startX;
 	static double pY = mb.startY;
@@ -56,7 +56,7 @@ internal class Program
 			switch (node.Name)
 			{
 				case "fpslimit":
-					if (node.InnerText.ToLower() == "none") fpslimit = 1000000 ;
+					if (node.InnerText.ToLower() == "none") fpslimit = 1000000;
 					else fpslimit = Convert.ToInt32(node.InnerText);
 					break;
 				case "startviewdegree":
@@ -84,7 +84,7 @@ internal class Program
 						switch (mapinfo.Name)
 						{
 							case "seed":
-								if(mapinfo.InnerText.ToLower() == "random")
+								if (mapinfo.InnerText.ToLower() == "random")
 								{
 									Random r = new();
 									seed = r.Next();
@@ -134,7 +134,8 @@ internal class Program
 		List<int> FloorList = new List<int>();
 		List<double> DistanceList = new List<double>();
 		List<Point> Seenwalls = new List<Point>();
-		int sf = 0;
+		List<double> collport = new();
+		List<char> dirr = new List<char>();
 		string[] minimap = new string[1];
 		string[] stats = new string[1];
 		Stopwatch stpw = new();
@@ -143,19 +144,21 @@ internal class Program
 		while (true)
 		{
 			stpw.Restart();
-			sf++;
+			#region Clean up
 			OutputBuilder.Clear();
 			DistanceList.Clear();
 			CeilingList.Clear();
-			FloorList.Clear(); 
+			FloorList.Clear();
 			Seenwalls.Clear();
-			//Console.Title = $"D:{showstats}";
+			collport.Clear();
+			#endregion
+			#region Distance mesire
 			// For each column, calculate the projected ray angle into world space
 			for (double d = 0 - pov / 2; d < pov / 2; d += steppov)
 			{
 				double RayX = Math.Sin(((d + pD) / 180) * Math.PI);
 				double RayY = Math.Cos(((d + pD) / 180) * Math.PI);
-
+				bool addedwal = false;
 				double distanceToWall = 0;
 				while (distanceToWall < viewlength)
 				{
@@ -170,13 +173,23 @@ internal class Program
 					}
 					else if (mb.Map[testY][testX])
 					{
+						double interX = (pX + (RayX * distanceToWall)) - testX;
+						double interY = (pY + (RayY * distanceToWall)) - testY;
+						if (interY < 0.1) collport.Add(1.0 - interX);//t
+						else if (interY > 0.9) collport.Add(interX);//b
+						else if (interX < 0.1) collport.Add(interY);//l
+						else if (interX > 0.9) collport.Add(1.0 - interY);//r
+						else collport.Add(-1.0);
 						distanceToWall *= Math.Cos(Math.Abs(d) / 180 * Math.PI);
 						Seenwalls.Add(new(testX, testY));
+						addedwal = true;
 						break;
 					}
-
 				}
-
+				if (!addedwal)
+				{
+					Seenwalls.Add(new()); collport.Add(-1.0);
+				}
 				// Calculate distance to ceiling and floor
 				DistanceList.Add(distanceToWall);
 				int Ceiling = (int)((double)(ScreenHeight / 2.0) - ScreenHeight / ((double)distanceToWall));
@@ -185,12 +198,13 @@ internal class Program
 				int Floor = ScreenHeight - Ceiling;
 				FloorList.Add(Floor);
 			}
+			#endregion
 			//try textures
 			//Fill Outputbuilder
 			int startx = 0;
 			int endx = (int)(pov / steppov);
-			if (showmap) { minimap = mb.getmap((int)pX, (int)pY, 10, pD, Seenwalls.ToArray()) ; }
-			if (showstats) { stats = getStats(pX,pY,pD,seed,pov,speed,steppov,viewlength,fps,fpslimit); }
+			if (showmap) { minimap = mb.getmap((int)pX, (int)pY, 10, pD, Seenwalls.ToArray()); }
+			if (showstats) { stats = getStats(pX, pY, pD, seed, pov, speed, steppov, viewlength, fps, fpslimit); }
 
 			for (int y = 0; y < ScreenHeight; y++)
 			{
@@ -198,29 +212,38 @@ internal class Program
 				else { startx = 0; }
 				if (showstats && y < stats.Length) { endx = (int)(pov / steppov) - stats[y].Length; }
 				else { endx = (int)(pov / steppov); }
-				
-				for (int x = startx; x <endx; x++)
+
+				string shader = "░▒▓█";
+
+				for (int x = startx; x < endx; x++)
 				{
 					char wallshade = ' ';
 					if (y >= CeilingList[x] && y < FloorList[x])
 					{
+						if (collport[x] != -1)
+						{
 
-						string shader = "░▒▓█";
-						int x_ = (x * texture.Width) / (int)(pov / steppov);
-						int y_ = ((y-CeilingList[x])*texture.Height) / (FloorList[x] - CeilingList[x]);
-						if (y_ > texture.Height - 1) y_ = texture.Height - 1;
-						int gray = texture.GetPixel(x_, y_).R;
-						wallshade = shader[(gray * shader.Length) / 255];
+
+							int x_ = (int)(collport[x] * texture.Width);
+							int y_ = ((y - CeilingList[x]) * texture.Height) / (FloorList[x] - CeilingList[x]);
+							if (y_ > texture.Height - 1) y_ = texture.Height - 1;
+							wallshade = shader[(texture.GetPixel(x_, y_).R * shader.Length) / 255];
+						}
+						else
+						{
+							if (DistanceList[x] <= viewlength / 4) wallshade = '█';
+							else if (DistanceList[x] < viewlength / 3) wallshade = '▓';
+							else if (DistanceList[x] < viewlength / 2) wallshade = '▒';
+							else if (DistanceList[x] < viewlength) wallshade = '░';
+							else wallshade = ' ';
+						}
 					}
-					//if (DistanceList[x] <= viewlength / 4) wallshade = '█';
-					//else if (DistanceList[x] < viewlength / 3) wallshade = '▓';
-					//else if (DistanceList[x] < viewlength / 2) wallshade = '▒';
-					//else if (DistanceList[x] < viewlength) wallshade = '░';
-					//else wallshade = ' ';
+					//wallshade = dirr[x];
+					
 
 
 					if (y < CeilingList[x]) OutputBuilder.Append(' ');
-					else if (y >= CeilingList[x] && y < FloorList[x]) 
+					else if (y >= CeilingList[x] && y < FloorList[x])
 						OutputBuilder.Append(wallshade);
 					else
 					{
@@ -233,7 +256,7 @@ internal class Program
 						OutputBuilder.Append(wallshade);
 					}
 				}
-				
+
 				if (showstats && y < stats.Length) OutputBuilder.Append(stats[y]);
 				OutputBuilder.Append('\n');
 			}
@@ -254,14 +277,10 @@ internal class Program
 
 			// Restart the stopwatch for the next frame
 			stpw.Restart();
-			if (fpslimit!=1000000) 
-			{
-				Console.Title = "66";
-			}
 
 		}
 	}
-	static string[] getStats(double x, double y, int degree, int seed, int pov, double speed, double steppov, int viewlength, int fps,int fpslimit)
+	static string[] getStats(double x, double y, int degree, int seed, int pov, double speed, double steppov, int viewlength, int fps, int fpslimit)
 	{
 		int biggestlength = 0;
 		List<string> stats = new List<string>
@@ -314,7 +333,8 @@ internal class Program
 			else if (key.Key == ConsoleKey.M)
 			{
 				showmap = !showmap;
-			}else if (key.Key == ConsoleKey.I)
+			}
+			else if (key.Key == ConsoleKey.I)
 			{
 				showstats = !showstats;
 			}
