@@ -227,7 +227,8 @@ internal class Program
 							int x_ = (int)(collport[x] * texture.Width);
 							int y_ = ((y - CeilingList[x]) * texture.Height) / (FloorList[x] - CeilingList[x]);
 							if (y_ > texture.Height - 1) y_ = texture.Height - 1;
-							wallshade = shader[(texture.GetPixel(x_, y_).R * shader.Length) / 255];
+							double gray = texture.GetPixel(x_, y_).R * (1.0-(DistanceList[x] / (double)(viewlength+15)));
+							wallshade = shader[ (int)(gray* shader.Length) / 255];
 						}
 						else
 						{
@@ -235,7 +236,6 @@ internal class Program
 							else if (DistanceList[x] < viewlength / 3) wallshade = '▓';
 							else if (DistanceList[x] < viewlength / 2) wallshade = '▒';
 							else if (DistanceList[x] < viewlength) wallshade = '░';
-							else wallshade = ' ';
 						}
 					}
 					//wallshade = dirr[x];
