@@ -139,6 +139,7 @@ internal class Program
 		string[] stats = new string[1];
 		Stopwatch stpw = new();
 		#endregion
+		Bitmap texture = new Bitmap("image.jpg");
 		while (true)
 		{
 			stpw.Restart();
@@ -165,9 +166,6 @@ internal class Program
 					if (testX < 0 || testY < 0 || testX > mb.Map.Length || testY > mb.Map.Length)
 					{
 						distanceToWall = viewlength;
-						
-						
-
 						break;
 					}
 					else if (mb.Map[testY][testX])
@@ -182,10 +180,12 @@ internal class Program
 				// Calculate distance to ceiling and floor
 				DistanceList.Add(distanceToWall);
 				int Ceiling = (int)((double)(ScreenHeight / 2.0) - ScreenHeight / ((double)distanceToWall));
+				if (Ceiling < 0) Ceiling = 0;
 				CeilingList.Add(Ceiling);
 				int Floor = ScreenHeight - Ceiling;
 				FloorList.Add(Floor);
 			}
+			//try textures
 			//Fill Outputbuilder
 			int startx = 0;
 			int endx = (int)(pov / steppov);
@@ -202,15 +202,26 @@ internal class Program
 				for (int x = startx; x <endx; x++)
 				{
 					char wallshade = ' ';
-					if (DistanceList[x] <= viewlength / 4) wallshade = '█';
-					else if (DistanceList[x] < viewlength / 3) wallshade = '▓';
-					else if (DistanceList[x] < viewlength / 2) wallshade = '▒';
-					else if (DistanceList[x] < viewlength) wallshade = '░';
-					else wallshade = ' ';
+					if (y >= CeilingList[x] && y < FloorList[x])
+					{
+
+						string shader = "░▒▓█";
+						int x_ = (x * texture.Width) / (int)(pov / steppov);
+						int y_ = ((y-CeilingList[x])*texture.Height) / (FloorList[x] - CeilingList[x]);
+						if (y_ > texture.Height - 1) y_ = texture.Height - 1;
+						int gray = texture.GetPixel(x_, y_).R;
+						wallshade = shader[(gray * shader.Length) / 255];
+					}
+					//if (DistanceList[x] <= viewlength / 4) wallshade = '█';
+					//else if (DistanceList[x] < viewlength / 3) wallshade = '▓';
+					//else if (DistanceList[x] < viewlength / 2) wallshade = '▒';
+					//else if (DistanceList[x] < viewlength) wallshade = '░';
+					//else wallshade = ' ';
 
 
 					if (y < CeilingList[x]) OutputBuilder.Append(' ');
-					else if (y >= CeilingList[x] && y < FloorList[x]) OutputBuilder.Append(wallshade);
+					else if (y >= CeilingList[x] && y < FloorList[x]) 
+						OutputBuilder.Append(wallshade);
 					else
 					{
 						double f = 1.0 - ((double)y - ScreenHeight / 2) / ((double)ScreenHeight / 2);
@@ -229,13 +240,6 @@ internal class Program
 			//Output
 			Console.SetCursorPosition(0, 0);
 			Console.Write(OutputBuilder.ToString());
-			//stpw.Stop();
-			//fps = 1000 / stpw.Elapsed.Milliseconds;
-			//if (fps > fpslimit&& (1000 / fpslimit - stpw.Elapsed.Milliseconds)>0) stpw.Start(); Thread.Sleep(1000 / fpslimit - stpw.Elapsed.Milliseconds);
-			//stpw.Stop();
-			//fps = 1000 / stpw.Elapsed.Milliseconds;
-			//if (1000 / fps > stpw.Elapsed.Milliseconds) Thread.Sleep(1000 / fps - stpw.Elapsed.Milliseconds);
-			// Measure elapsed time since last frame
 			double elapsedSeconds = stpw.Elapsed.TotalSeconds;
 
 			// Calculate remaining time until next frame

@@ -6,7 +6,7 @@
     <rangeofview>15</rangeofview><!--Дальность зрения-->
     <screenheight>30</screenheight><!--Высота экрана-->
     <mapinfo>
-        <seed>random</seed><!--Сид карты, можно вписать random для рандомного сида-->
+        <seed>668092140</seed><!--Сид карты, можно вписать random для рандомного сида-->
         <size>50</size><!--Размер карты-->
         <rooms>20</rooms><!--Количество комнат-->
         <minroomsize>7</minroomsize><!--Минимальный размер комнаты-->

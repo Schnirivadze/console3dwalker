@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "ZFmuon6b3jaN3Sxor662wWH0JUfXvZq4RXmb8K2Mp/hrRmkYeS3F9Fdbqm7Vp+oFFxTeG6x4Oe/JHISAMlp4/w==",
+  "dgSpecHash": "box4/8GjAvRwTZDZSwSJRN5m4xlzMcS9IIuH4e9IX0CP4t9wZuIkeEcvjojUVgbZ6ZfPBSfwvMhh+6htf1smpg==",
   "success": true,
   "projectFilePath": "C:\\Projects\\c#\\small\\game1\\game1\\game1.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\andrew\\.nuget\\packages\\microsoft.win32.systemevents\\7.0.0\\microsoft.win32.systemevents.7.0.0.nupkg.sha512",
+    "C:\\Users\\andrew\\.nuget\\packages\\system.drawing.common\\7.0.0\\system.drawing.common.7.0.0.nupkg.sha512"
+  ],
   "logs": []
 }

@@ -13,3 +13,8 @@ C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\refint\game1.dll
 C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.pdb
 C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.genruntimeconfig.cache
 C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\ref\game1.dll
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\Microsoft.Win32.SystemEvents.dll
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\System.Drawing.Common.dll
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+C:\Projects\c#\small\game1\game1\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
+C:\Projects\c#\small\game1\game1\obj\Debug\net6.0\game1.csproj.CopyComplete
