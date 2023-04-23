@@ -217,7 +217,9 @@ internal class MapBuilder
 				}
 			}
 			mapbmp.SetPixel(startX, startY, Color.Red);
-			mapbmp.Save($"maps\\Map[{seed}].bmp", ImageFormat.Bmp); mapbmp.Dispose();
+			if (Directory.Exists("maps")) mapbmp.Save($"maps\\Map[{seed}].bmp", ImageFormat.Bmp);
+			else { Directory.CreateDirectory("maps"); mapbmp.Save($"maps\\Map[{seed}].bmp", ImageFormat.Bmp); }
+			mapbmp.Dispose();
 		}
 	}
 	public string[] getmap(int _x, int _y, int range, int degree, Point[] seenwalls)
