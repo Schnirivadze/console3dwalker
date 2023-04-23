@@ -12,5 +12,10 @@
         <minroomsize>7</minroomsize><!--Минимальный размер комнаты-->
         <maxroomsize>10</maxroomsize><!--Максимальный размер комнаты-->
     </mapinfo>
+    <shaders>
+        <shaderstr>░▒▓█</shaderstr><!--Шейдер в виде строки-->
+        <shaderpath>textures/imageflat.jpg</shaderpath><!--Шейдер в виде пути к картинке-->
+        <shaderpath>textures/fence.jpg</shaderpath>
+    </shaders>
 </settings>
     

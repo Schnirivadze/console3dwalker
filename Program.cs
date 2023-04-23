@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
-using test;
 
 internal class Program
 {
@@ -21,7 +20,7 @@ internal class Program
 	static int fps = 30;
 	static int fpslimit = 10;
 	static int seed = 0;
-	static MapBuilder mb = new(50, 50, 7, 10, 7, 10, false, 14);
+	static MapBuilder mb = new(50, 50, 7, 10, 7, 10, false, 14,false);
 	static StringBuilder OutputBuilder = new();
 	static double pX = mb.startX;
 	static double pY = mb.startY;
@@ -36,6 +35,30 @@ internal class Program
 	#endregion
 	static void Main(string[] args)
 	{
+		#region Set up
+		//Console--------------------------------------------------------------------------
+		Console.SetWindowSize((int)(pov / steppov) + 1, ScreenHeight + 1);
+		Console.SetBufferSize((int)(pov / steppov) + 1, ScreenHeight + 1);
+		Console.CursorVisible = false;
+		Console.OutputEncoding = Encoding.UTF8;
+		//threads--------------------------------------------------------------------------
+		new Thread(new ThreadStart(CursWhatch)).Start();
+		new Thread(new ThreadStart(movementWhatch)).Start();
+		//lists----------------------------------------------------------------------------
+		List<int> CeilingList = new();
+		List<int> FloorList = new();
+		List<double> DistanceList = new();
+		List<Point> Seenwalls = new();
+		List<double> WallPartList = new();
+		List<Shader> ShaderList = new();
+		List<int> WallTypeList = new();
+		//2d arrays------------------------------------------------------------------------
+		string[] minimap = new string[1];
+		string[] stats = new string[1];
+		//other----------------------------------------------------------------------------
+		Stopwatch stpw = new();
+		//byte[][] currentshader.texture = Functions.Gettexture("image.jpg");
+		#endregion
 		#region XmlSettings
 
 		XmlDocument xmlDoc = new XmlDocument();
@@ -77,7 +100,6 @@ internal class Program
 				case "screenheight":
 					ScreenHeight = Convert.ToInt32(node.InnerText);
 					break;
-
 				case "mapinfo":
 					foreach (XmlNode mapinfo in node.ChildNodes)
 					{
@@ -109,11 +131,24 @@ internal class Program
 						}
 					}
 					break;
-
+				case "shaders":
+					foreach (XmlNode shadernode in node.ChildNodes)
+					{
+						switch (shadernode.Name)
+						{
+							case "shaderpath":
+								ShaderList.Add(new(Functions.Gettexture(shadernode.InnerText)));
+								break;
+							case "shaderstr":
+								ShaderList.Add(new(shadernode.InnerText));
+								break;
+						}
+					}
+					break;
 			}
 			if (minroomsize != (-1) && maxroomsize != (-1) && mapsize != (-1) && rooms != (-1))
 			{
-				mb = new(50, 50, 7, 10, 7, 10, false, seed);
+				mb = new(50, 50, 7, 10, 7, 10, false, seed,true);
 				//mb = new MapBuilder(mapsize, 20, minroomsize, maxroomsize, minroomsize, maxroomsize, false);
 				pX = mb.startX;
 				pY = mb.startY;
@@ -121,28 +156,9 @@ internal class Program
 			//Console.WriteLine(node.Name + ": " + node.InnerText);
 		}
 		#endregion
-		#region Set up
-		Console.SetWindowSize((int)(pov / steppov) + 1, ScreenHeight + 1);
-		Console.SetBufferSize((int)(pov / steppov) + 1, ScreenHeight + 1);
-		Console.CursorVisible = false;
-		Console.OutputEncoding = System.Text.Encoding.UTF8;
-		Thread curs = new Thread(new ThreadStart(CursWhatch));
-		Thread movement = new Thread(new ThreadStart(movementWhatch));
-		movement.Start();
-		curs.Start();
-		List<int> CeilingList = new List<int>();
-		List<int> FloorList = new List<int>();
-		List<double> DistanceList = new List<double>();
-		List<Point> Seenwalls = new List<Point>();
-		List<double> collport = new();
-		List<char> dirr = new List<char>();
-		string[] minimap = new string[1];
-		string[] stats = new string[1];
-		Stopwatch stpw = new();
-		#endregion
-		Bitmap texture = new Bitmap("image.jpg");
 		while (true)
 		{
+			
 			stpw.Restart();
 			#region Clean up
 			OutputBuilder.Clear();
@@ -150,36 +166,47 @@ internal class Program
 			CeilingList.Clear();
 			FloorList.Clear();
 			Seenwalls.Clear();
-			collport.Clear();
+			WallPartList.Clear();
+			WallTypeList.Clear();
 			#endregion
-			#region Distance mesire
+			#region Distance measure
 			// For each column, calculate the projected ray angle into world space
+			double RayX, RayY, distanceToWall, interX, interY,raystep=0.1;
+			bool addedwal;
+			int testX, testY;
+			int lookingat=-1;
 			for (double d = 0 - pov / 2; d < pov / 2; d += steppov)
 			{
-				double RayX = Math.Sin(((d + pD) / 180) * Math.PI);
-				double RayY = Math.Cos(((d + pD) / 180) * Math.PI);
-				bool addedwal = false;
-				double distanceToWall = 0;
+				RayX = Math.Sin(((d + pD) / 180) * Math.PI);
+				RayY = Math.Cos(((d + pD) / 180) * Math.PI);
+				addedwal = false;
+				distanceToWall = 0;
 				while (distanceToWall < viewlength)
 				{
-					distanceToWall += 0.1;
-					int testX = (int)(pX + (RayX * distanceToWall));
-					int testY = (int)(pY + (RayY * distanceToWall));
+					distanceToWall += raystep;
+					testX = (int)(pX + (RayX * distanceToWall));
+					testY = (int)(pY + (RayY * distanceToWall));
 					//if out of bounds
 					if (testX < 0 || testY < 0 || testX > mb.Map.Length || testY > mb.Map.Length)
 					{
 						distanceToWall = viewlength;
 						break;
 					}
-					else if (mb.Map[testY][testX])
+					else if (mb.Map[testY][testX]!=0)
 					{
-						double interX = (pX + (RayX * distanceToWall)) - testX;
-						double interY = (pY + (RayY * distanceToWall)) - testY;
-						if (interY < 0.1) collport.Add(1.0 - interX);//t
-						else if (interY > 0.9) collport.Add(interX);//b
-						else if (interX < 0.1) collport.Add(interY);//l
-						else if (interX > 0.9) collport.Add(1.0 - interY);//r
-						else collport.Add(-1.0);
+						if (d == 0) { lookingat = mb.Map[testY][testX]; }
+						WallTypeList.Add(mb.Map[testY][testX]);
+						interX = (pX + (RayX * distanceToWall)) - testX;
+						interY = (pY + (RayY * distanceToWall)) - testY;
+						//if corner
+						 if ((interX < raystep && interY < raystep) || (interX > 1- raystep && interY > 1- raystep) ||(interX < raystep && interY > 1 - raystep) || (interX > 1 - raystep && interY < raystep)) WallPartList.Add(-2.0);
+						//if not corner
+						else if(interY < raystep) WallPartList.Add(1.0 - interX);//t
+						else if (interY > 1 - raystep) WallPartList.Add(interX);//b
+						else if (interX < raystep) WallPartList.Add(interY);//l
+						else if (interX > 1 - raystep) WallPartList.Add(1.0 - interY);//r
+						//else
+						else WallPartList.Add(-1.0);
 						distanceToWall *= Math.Cos(Math.Abs(d) / 180 * Math.PI);
 						Seenwalls.Add(new(testX, testY));
 						addedwal = true;
@@ -188,7 +215,8 @@ internal class Program
 				}
 				if (!addedwal)
 				{
-					Seenwalls.Add(new()); collport.Add(-1.0);
+					Seenwalls.Add(new()); WallPartList.Add(-1.0);
+					WallTypeList.Add(0);
 				}
 				// Calculate distance to ceiling and floor
 				DistanceList.Add(distanceToWall);
@@ -199,12 +227,14 @@ internal class Program
 				FloorList.Add(Floor);
 			}
 			#endregion
-			//try textures
+			#region Output
 			//Fill Outputbuilder
 			int startx = 0;
+			string shader = "░▒▓█";
 			int endx = (int)(pov / steppov);
+			Shader currentshader;
 			if (showmap) { minimap = mb.getmap((int)pX, (int)pY, 10, pD, Seenwalls.ToArray()); }
-			if (showstats) { stats = getStats(pX, pY, pD, seed, pov, speed, steppov, viewlength, fps, fpslimit); }
+			if (showstats) { stats = Functions.getStats(pX, pY, pD, seed, pov, speed, steppov, viewlength, fps, fpslimit,lookingat); }
 
 			for (int y = 0; y < ScreenHeight; y++)
 			{
@@ -213,25 +243,28 @@ internal class Program
 				if (showstats && y < stats.Length) { endx = (int)(pov / steppov) - stats[y].Length; }
 				else { endx = (int)(pov / steppov); }
 
-				string shader = "░▒▓█";
-
 				for (int x = startx; x < endx; x++)
 				{
 					char wallshade = ' ';
 					if (y >= CeilingList[x] && y < FloorList[x])
 					{
-						if (collport[x] != -1)
+						if (WallPartList[x] >0)
 						{
 
-
-							int x_ = (int)(collport[x] * texture.Width);
-							int y_ = ((y - CeilingList[x]) * texture.Height) / (FloorList[x] - CeilingList[x]);
-							if (y_ > texture.Height - 1) y_ = texture.Height - 1;
-							double gray = texture.GetPixel(x_, y_).R * (1.0-(DistanceList[x] / (double)(viewlength+15)));
-							wallshade = shader[ (int)(gray* shader.Length) / 255];
+							currentshader = ShaderList[WallTypeList[x]];
+							int x_ = (int)(WallPartList[x] * currentshader.texture[0].Length);
+							int y_ = ((y - CeilingList[x]) * currentshader.texture.Length) / (FloorList[x] - CeilingList[x]);
+							if (y_ > currentshader.texture.Length - 1) y_ = currentshader.texture.Length - 1;
+							double gray = currentshader.texture[y_][x_] * (1.0 - (DistanceList[x] / (double)(viewlength * 2)));
+							wallshade = shader[(int)(gray * shader.Length) / 255];
+						}
+						else if (WallPartList[x] == -2.0)
+						{
+							wallshade = '|';
 						}
 						else
 						{
+
 							if (DistanceList[x] <= viewlength / 4) wallshade = '█';
 							else if (DistanceList[x] < viewlength / 3) wallshade = '▓';
 							else if (DistanceList[x] < viewlength / 2) wallshade = '▒';
@@ -239,7 +272,7 @@ internal class Program
 						}
 					}
 					//wallshade = dirr[x];
-					
+
 
 
 					if (y < CeilingList[x]) OutputBuilder.Append(' ');
@@ -263,10 +296,10 @@ internal class Program
 			//Output
 			Console.SetCursorPosition(0, 0);
 			Console.Write(OutputBuilder.ToString());
-			double elapsedSeconds = stpw.Elapsed.TotalSeconds;
-
+			#endregion
+			#region Fps handling
 			// Calculate remaining time until next frame
-			double remainingSeconds = 1.0 / fpslimit - elapsedSeconds;
+			double remainingSeconds = 1.0 / fpslimit - stpw.Elapsed.TotalSeconds;
 
 			// Wait for remaining time using a thread sleep
 			if (remainingSeconds > 0)
@@ -274,41 +307,9 @@ internal class Program
 				Thread.Sleep(TimeSpan.FromSeconds(remainingSeconds));
 			}
 			fps = (int)(1000 / stpw.Elapsed.TotalMilliseconds);
-
-			// Restart the stopwatch for the next frame
-			stpw.Restart();
+			#endregion
 
 		}
-	}
-	static string[] getStats(double x, double y, int degree, int seed, int pov, double speed, double steppov, int viewlength, int fps, int fpslimit)
-	{
-		int biggestlength = 0;
-		List<string> stats = new List<string>
-			{
-				"│ X: " + x.ToString("0.00") + " ",
-				"│ Y: " + y.ToString("0.00") + " ",
-				"│ D: " + degree + " ",
-				"│ Seed: " + seed + " ",
-				"│ FOV: " + pov + "/" + steppov + " ",
-				"│ Speed: " + speed.ToString("0.00") + " ",
-				"│ Range: " + viewlength + " ",
-				"│ FPS: " + fps + "/"+((fpslimit==1000000)? '∞': fpslimit.ToString())+' '
-			};
-		foreach (string line in stats)
-		{
-			if (line.Length > biggestlength) biggestlength = line.Length;
-		}
-		for (int i = 0; i < stats.Count; i++)
-		{
-			if (stats[i].Length < biggestlength) stats[i] += new string(' ', biggestlength - stats[i].Length) + '│';
-			else stats[i] += '│';
-		}
-		stats.Add('└' + new string('─', stats[0].Length - 2) + '┘');
-		stats.Insert(0, '├' + new string('-', stats[0].Length - 2) + '┤');
-		stats.Insert(0, '│' + new string(' ', (stats[0].Length - 8) / 2) + "STATS " + new string(' ', (stats[0].Length - 8) / 2) + '│');
-		stats.Insert(0, '┌' + new string('─', stats[0].Length - 2) + '┐');
-
-		return stats.ToArray();
 	}
 
 	private static void movementWhatch()
@@ -320,12 +321,12 @@ internal class Program
 			// Convert degrees to radians
 			double angle = pD * Math.PI / 180.0;
 
-			if (key.Key == ConsoleKey.W && !mb.Map[(int)(pY + step * Math.Cos(angle))][(int)(pX + step * Math.Sin(angle))])
+			if (key.Key == ConsoleKey.W && mb.Map[(int)(pY + step * Math.Cos(angle))][(int)(pX + step * Math.Sin(angle))]==0)
 			{
 				pX += step * Math.Sin(angle);
 				pY += step * Math.Cos(angle);
 			}
-			else if (key.Key == ConsoleKey.S && !mb.Map[(int)(pY - step * Math.Cos(angle))][(int)(pX - step * Math.Sin(angle))])
+			else if (key.Key == ConsoleKey.S && mb.Map[(int)(pY - step * Math.Cos(angle))][(int)(pX - step * Math.Sin(angle))]==0)
 			{
 				pX -= step * Math.Sin(angle);
 				pY -= step * Math.Cos(angle);
